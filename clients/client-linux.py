@@ -20,6 +20,7 @@ import os
 import json
 import subprocess
 import collections
+import platform
 
 def get_uptime():
 	f = open('/proc/uptime', 'r')
@@ -55,7 +56,17 @@ def get_hdd():
 	return int(size), int(used)
 
 def get_load():
-	return os.getloadavg()[0]
+	system = platform.linux_distribution()
+	if system[0][:6] == "CentOS":
+		if system[1][0] == "6":
+			tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp |grep '::ffff:' |awk '{print $5}' |awk -F ':' '{print $4}' |sort -u |wc -l").read()
+		else:
+			tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |wc -l").read()
+	else:
+		tmp_load = os.popen("netstat -anp |grep ESTABLISHED |grep tcp6 |awk '{print $5}' |awk -F ':' '{print $1}' |sort -u |wc -l").read()
+	
+	return float(tmp_load)
+	#return os.getloadavg()[0]
 
 def get_time():
 	stat_file = file("/proc/stat", "r")
